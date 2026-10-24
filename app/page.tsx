@@ -30,7 +30,7 @@ export default function Page() {
       </section>
 
       <section className="signal-strip" aria-label="Nyaya principles">
-        <div><span className="signal-number">01</span><strong>Find the route</strong><span>Start from a service's public footprint.</span></div>
+        <div><span className="signal-number">01</span><strong>Find the route</strong><span>Start from a service&apos;s public footprint.</span></div>
         <div><span className="signal-number">02</span><strong>Keep the evidence</strong><span>Separate observation from assumption.</span></div>
         <div><span className="signal-number">03</span><strong>Stay in control</strong><span>Nyaya stops before submission.</span></div>
       </section>

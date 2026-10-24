@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 
 import { buildDraftBody } from '../../../src/cases/draft.ts';
-import { caseStore } from '../../../src/cases/store-instance.ts';
+import { getCaseStore } from '../../../src/cases/store-instance.ts';
 import type { RequestDraftInput } from '../../../src/web/domain.ts';
 
 function error(code: string, message: string, status: number) {
@@ -11,7 +11,7 @@ function error(code: string, message: string, status: number) {
 }
 
 export async function GET() {
-  return NextResponse.json({ cases: caseStore.list() });
+  return NextResponse.json({ cases: getCaseStore().list() });
 }
 
 export async function POST(request: Request) {
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   }
 
   const now = new Date().toISOString();
-  const created = caseStore.create({
+  const created = getCaseStore().create({
     id: randomUUID(),
     destinationName:
       typeof input.destinationName === 'string' && input.destinationName.trim()

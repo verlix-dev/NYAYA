@@ -1,5 +1,10 @@
 import type { CaseStatus, PrivacyCase } from './state.ts';
-import { createPrivacyCase, transitionCase } from './state.ts';
+import {
+  CaseDraftUpdateError,
+  canUpdateDraft,
+  createPrivacyCase,
+  transitionCase,
+} from './state.ts';
 
 export class InMemoryCaseStore {
   private readonly cases = new Map<string, PrivacyCase>();
@@ -42,7 +47,42 @@ export class InMemoryCaseStore {
     return updated;
   }
 
+  updateDraft(id: string, draftBody: string, now: string): PrivacyCase {
+    const current = this.cases.get(id);
+    if (!current) {
+      throw new Error(`Case not found: ${id}`);
+    }
+    if (typeof draftBody !== 'string' || draftBody.trim() === '') {
+      throw new Error('draftBody must be a non-empty string.');
+    }
+    if (!canUpdateDraft(current.status)) {
+      throw new CaseDraftUpdateError(current.status);
+    }
+
+    const updated: PrivacyCase = {
+      ...current,
+      draftBody,
+      updatedAt: now,
+      events: [
+        ...current.events,
+        {
+          from: current.status,
+          to: current.status,
+          actor: 'user',
+          reason: 'User edited the access-request draft.',
+          occurredAt: now,
+        },
+      ],
+    };
+    this.cases.set(id, updated);
+    return updated;
+  }
+
   delete(id: string): boolean {
     return this.cases.delete(id);
+  }
+
+  clear(): void {
+    this.cases.clear();
   }
 }

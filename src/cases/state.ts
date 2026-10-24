@@ -75,6 +75,31 @@ export function canTransitionCase(from: CaseStatus, to: CaseStatus): boolean {
   return allowedTransitions[from].includes(to);
 }
 
+// Draft body edits are only meaningful before the request leaves Nyaya's
+// control. These are the pre-submission states where the user is still
+// shaping the text that will be handed off. Once the case reaches
+// awaiting_user_action the draft has been handed to the user and must not
+// be silently rewritten.
+const DRAFT_UPDATABLE_STATUSES: readonly CaseStatus[] = [
+  'preparing',
+  'draft_ready',
+];
+
+export function canUpdateDraft(status: CaseStatus): boolean {
+  return DRAFT_UPDATABLE_STATUSES.includes(status);
+}
+
+export class CaseDraftUpdateError extends Error {
+  readonly code = 'CASE_DRAFT_UPDATE_PROHIBITED';
+  readonly status: CaseStatus;
+
+  constructor(status: CaseStatus) {
+    super(`Draft updates are not permitted while the case is ${status}.`);
+    this.name = 'CaseDraftUpdateError';
+    this.status = status;
+  }
+}
+
 export function transitionCase(
   current: PrivacyCase,
   to: CaseStatus,
@@ -115,6 +140,10 @@ export function createPrivacyCase(input: {
   draftBody: string;
   now: string;
 }): PrivacyCase {
+  if (typeof input.draftBody !== 'string' || input.draftBody.trim() === '') {
+    throw new Error('draftBody must be a non-empty string.');
+  }
+
   const event: CaseEvent = {
     from: null,
     to: 'created',
